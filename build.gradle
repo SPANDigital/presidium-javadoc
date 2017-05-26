@@ -13,17 +13,34 @@ configurations {
     presidiumDoclet
 }
 
+sourceSets {
+    main {
+        java {
+//            exclude '**/java/nio/**'
+        }
+    }
+}
+
 dependencies {
     compile files("${System.properties['java.home']}/../lib/tools.jar")
     testCompile group: 'junit', name: 'junit', version: '4.11'
+
+    presidiumDoclet files("build/classes/main")     //TODO Reference doclet dependency
+}
+
+task myJavadocs(type: Javadoc) {
+    source = sourceSets.main.allJava
 }
 
 task presidiumDocs(type: Javadoc) {
-
     source = sourceSets.main.allJava
-    destinationDir = reporting.file("presidium-reference-docs")
-    options.docletpath = files("/Users/paco/Workspace/span/presidium/javadoc/doclet/build/libs/doclet-0.0.1-SNAPSHOT.jar").asType(List)
+    destinationDir = file("${docsDir}/presidium")
+    options.docletpath = configurations.presidiumDoclet.files.asType(List)
     options.doclet = "net.spandigital.presidium.Doclet"
 }
 
+task presidiumDocsJar(type: Jar, dependsOn: presidiumDocs) {
+    baseName = "${rootProject.name}-docs"
+    from file("${docsDir}/presidium")
+}
 

@@ -3,8 +3,6 @@
  */
 package net.spandigital.presidium;
 
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.RootDoc;
 import com.sun.tools.javadoc.Main;
 
 import java.io.IOException;
@@ -31,23 +29,17 @@ public class DocletRunner {
             subpackages - one of our own packages
             output - a directory, relative to the project
         */
-        Main.execute("Javadoc-MD", "net.spandigital.presidium.Doclet", new String[]{
-//                "-sourcepath", System.getProperty("user.dir") + "/src/main/java",
-//                "-sourcepath", "/Users/paco/Workspace/span/presidium/javadoc/doclet/mt-common-services/mt-common-services-client/src/main/java",
-                "-sourcepath", "/Users/paco/Workspace/span/presidium/javadoc/doclet/src/main/java",
-
-                "-subpackages", "com.sun.tools",
-                "-d", System.getProperty("user.dir") + "/docs/presidium"
+        Main.execute("Markdown Generator", "net.spandigital.presidium.Doclet", new String[]{
+                "-sourcepath", System.getProperty("user.dir") + "/src/test/resources",
+                "-subpackages", "java.time",
+                "-d", System.getProperty("user.dir") + "/docs/test"
         });
     }
 
     private static void buildJavadoc() {
         Main.execute(new String[]{
                 "-sourcepath", "/Users/paco/Workspace/span/presidium/javadoc/doclet/src/main/java",
-                "-subpackages", "com.sun.tools",
-//                "-group", "html", "com.outerthoughts.javadoc.iframed.formats.html:com.outerthoughts.javadoc.iframed.formats.html.markup",
-//                "-group", "internal", "com.outerthoughts.javadoc.iframed.internal.toolkit:com.outerthoughts.javadoc.iframed.internal.toolkit.builders:com.outerthoughts.javadoc.iframed.internal.toolkit.taglets:com.outerthoughts.javadoc.iframed.internal.toolkit.util:com.outerthoughts.javadoc.iframed.internal.toolkit.util.links",
-//                "-use", "-nohelp", "-splitindex",
+                "-subpackages", "java.time",
                 "-d", System.getProperty("user.dir") + "/docs/javadoc"
         });
 

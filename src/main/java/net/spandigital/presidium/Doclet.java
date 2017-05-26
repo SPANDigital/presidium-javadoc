@@ -14,13 +14,20 @@ import java.nio.file.Paths;
 public class Doclet {
 
     public static boolean start(RootDoc root) throws IOException {
-
         Path target = targetPath(root);
         clean(target);
-        writeArticles(target, root.classes());
+
+        PackageWriter.write(target, root);
+        ClassWriter.write(target, root);
+
         return true;
     }
 
+    /**
+     * Support additional options
+     * @param option
+     * @return
+     */
     public static int optionLength(String option) {
         if (option.equals("-d") || option.equals("-doctitle") || option.equals("-windowtitle")) {
             return 2;
@@ -38,17 +45,13 @@ public class Doclet {
     }
 
     private static void clean(Path target) throws IOException {
+        System.out.println(String.format("Cleaning: %s", target));
+        if (!Files.exists(target)) {
+            return;
+        }
         Files.walk(target)
                 .map(Path::toFile)
-                .peek(System.out::println)
                 .forEach(File::delete);
     }
-
-    private static void writeArticles(Path target, ClassDoc[] classes) throws IOException {
-        for (ClassDoc cls : classes) {
-            ArticleWriter.write(target, cls);
-        }
-    }
-
 
 }
