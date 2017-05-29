@@ -12,13 +12,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static net.spandigital.presidium.Markdown.link;
+import static net.spandigital.presidium.Markdown.newLine;
+
 /**
  *
  * @author Paco Mendes
  */
 public class PackageWriter {
 
-    public static void write(Path target, RootDoc root) throws IOException {
+    public static void writeAll(Path target, RootDoc root) throws IOException {
 
         List<PackageDoc> packages = Arrays.stream(root.classes())
                 .map(ClassDoc::containingPackage)
@@ -26,52 +29,45 @@ public class PackageWriter {
                 .sorted(Comparator.comparing(PackageDoc::name))
                 .collect(Collectors.toList());
 
-        Path dir = target.resolve("Packages");
-        Files.createDirectories(dir);
+        Files.createDirectories(target);
+        FileWriter.writeIndex(target, "Packages");
 
-        writePackageList(dir, packages);
+        writePackageList(target, packages);
 
         int i = 1;
         for (PackageDoc pkg : packages) {
-            Path file = dir.resolve(Template.fileName(i++, pkg.name()));
+            Path file = target.resolve(Markdown.fileName(i++, pkg.name()));
             writeArticle(file, pkg);
         }
     }
 
     private static void writePackageList(Path dir, List<PackageDoc> packages) {
-        Path file = dir.resolve(Template.fileName(0, "package-summary"));
-        StringBuffer content = new StringBuffer();
-        content.append(Template.frontMatter("Packages"));
-        content.append(packageList(packages));
-        FileWriter.write(file, content);
+        Path file = dir.resolve(Markdown.fileName(0, "package-summary"));
+        FileWriter.write(file, Markdown.join(
+                Markdown.frontMatter("Packages"),
+                packageList(packages)
+        ));
     }
 
     private static void writeArticle(Path file, PackageDoc pkg) {
-        StringBuffer content = new StringBuffer();
-        content.append(Template.frontMatter(pkg.name()));
-
-        content.append(Template.firstLine(pkg));
-        content.append("\n");
-        content.append(packageClasses(pkg));
-        content.append("\n");
-        content.append(Template.h1("Package Description"));
-        content.append(pkg.commentText());
-
-        FileWriter.write(file, content);
+        Comment comment = Comment.parse(pkg);
+        FileWriter.write(file, Markdown.join(
+                Markdown.frontMatter(pkg.name()),
+                comment.getSummary(),
+                packageClasses(pkg),
+                Markdown.h1( "Package Description"),
+                comment.getBody()
+        ));
     }
 
     private static String packageList(List<PackageDoc> packages) {
-        return packages.size() > 0 ?
-                        "| Package    | Description\n" +
-                        "|:---------|:-----------\n" +
-                                packages.stream()
-                                .sorted()
-                                .map(p -> String.format("|[%s](#%s) |%s", p.name(), p.name(), Template.firstLine(p)))
-                                .collect(Collectors.joining("\n")) +
-                        "\n"
-                : "";
-
-
+        return packages.size() == 0 ? "" :
+                Markdown.tableHeader("Package", "Description") +
+                packages.stream()
+                    .sorted()
+                    .map(p -> Markdown.tableRow(Markdown.link(p.name(), p.name()), Comment.parse(p).getSummary()))
+                    .collect(Collectors.joining()) +
+                newLine();
     }
 
     private static String packageClasses(PackageDoc pkg) {
@@ -82,15 +78,15 @@ public class PackageWriter {
     }
 
     private static String classTable(String type, ClassDoc[] classes) {
-        return classes.length > 0 ?
-                Template.h1(type) +
-                "| "+ type +"    | Description\n" +
-                "|:---------|:-----------\n" +
+        return classes.length == 0 ? "" :
+                Markdown.h1(type) +
+                Markdown.tableHeader(type, "Description") +
                 Arrays.stream(classes).sorted()
-                    .map(c -> String.format("|%s |%s", c.name(), Template.firstLine(c)))
-                    .collect(Collectors.joining("\n")) +
-                "\n"
-                : "";
+                    .map(c -> Markdown.tableRow(
+                            link("../classes#" + c.name().toLowerCase(), c.name()),
+                            Comment.parse(c).getSummary()))
+                    .collect(Collectors.joining()) +
+                newLine();
     }
 
 

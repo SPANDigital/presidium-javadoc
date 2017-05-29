@@ -1,7 +1,5 @@
 package net.spandigital.presidium;
 
-import com.sun.javadoc.ClassDoc;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +9,10 @@ import java.nio.file.Path;
  * Created by paco on 2017/05/26.
  */
 public class FileWriter {
+
+    public static void writeIndex(Path path, String title) {
+        write(path.resolve("index.md"), Markdown.frontMatter(title));
+    }
 
     public static void write(Path file, StringBuffer content) {
         write(file, content.toString());

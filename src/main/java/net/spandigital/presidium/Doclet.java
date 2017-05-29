@@ -17,8 +17,8 @@ public class Doclet {
         Path target = targetPath(root);
         clean(target);
 
-        PackageWriter.write(target, root);
-        ClassWriter.write(target, root);
+        PackageWriter.writeAll(target.resolve("01-Packages"), root);
+        ClassWriter.writeAll(target.resolve("02-Classes"), root);
 
         return true;
     }

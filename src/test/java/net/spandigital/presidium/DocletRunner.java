@@ -32,7 +32,8 @@ public class DocletRunner {
         Main.execute("Markdown Generator", "net.spandigital.presidium.Doclet", new String[]{
                 "-sourcepath", System.getProperty("user.dir") + "/src/test/resources",
                 "-subpackages", "java.time",
-                "-d", System.getProperty("user.dir") + "/docs/test"
+//                "-d", System.getProperty("user.dir") + "/docs/test"
+                "-d", "/Users/paco/Workspace/span/presidium/presidium/content/_reference/Time API"
         });
     }
 
