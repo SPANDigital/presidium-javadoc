@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.spandigital.presidium.Markdown.linkSite;
+import static net.spandigital.presidium.Markdown.siteLink;
 import static net.spandigital.presidium.Markdown.newLine;
 
 /**
@@ -21,7 +21,22 @@ import static net.spandigital.presidium.Markdown.newLine;
  */
 public class PackageWriter {
 
-    public static void writeAll(Path target, String baseurl, RootDoc root) throws IOException {
+    private RootDoc root;
+    private Path destination;
+    private String sectionUrl;
+
+    public static PackageWriter init(RootDoc root, Path destination, String sectionUrl) {
+        PackageWriter writer = new PackageWriter();
+        writer.root = root;
+        writer.destination = destination;
+        writer.sectionUrl = sectionUrl;
+        return writer;
+    }
+
+    private PackageWriter() {
+    }
+
+    public void writeAll() throws IOException {
 
         List<PackageDoc> packages = Arrays.stream(root.classes())
                 .map(ClassDoc::containingPackage)
@@ -29,32 +44,32 @@ public class PackageWriter {
                 .sorted(Comparator.comparing(PackageDoc::name))
                 .collect(Collectors.toList());
 
-        Files.createDirectories(target);
-        FileWriter.writeIndex(target, "Packages");
+        Files.createDirectories(destination);
+        FileWriter.writeIndex(destination, "Packages");
 
-        writePackageList(target, packages);
+        writePackageList(packages);
 
         int i = 1;
         for (PackageDoc pkg : packages) {
-            Path file = target.resolve(Markdown.fileName(i++, pkg.name()));
-            writeArticle(file, pkg, baseurl);
+            Path file = destination.resolve(Markdown.fileName(i++, pkg.name()));
+            writeArticle(file, pkg);
         }
     }
 
-    private static void writePackageList(Path dir, List<PackageDoc> packages) {
-        Path file = dir.resolve(Markdown.fileName(0, "package-summary"));
+    private void writePackageList(List<PackageDoc> packages) {
+        Path file = destination.resolve(Markdown.fileName(0, "package-summary"));
         FileWriter.write(file, Markdown.join(
                 Markdown.frontMatter("Packages"),
                 packageList(packages)
         ));
     }
 
-    private static void writeArticle(Path file, PackageDoc pkg, String baseurl) {
+    private void writeArticle(Path file, PackageDoc pkg) {
         Comment comment = Comment.parse(pkg);
         FileWriter.write(file, Markdown.join(
                 Markdown.frontMatter(pkg.name()),
                 comment.getSummary(),
-                packageClasses(pkg, baseurl),
+                packageClasses(pkg),
                 Markdown.h1( "Package Description"),
                 comment.getBody()
         ));
@@ -65,29 +80,30 @@ public class PackageWriter {
                 Markdown.tableHeader("Package", "Description") +
                 packages.stream()
                     .sorted()
-                    .map(p -> Markdown.tableRow(Markdown.linkAnchor(p.name(), p.name()), Comment.parse(p).getSummary()))
+                    .map(p -> Markdown.tableRow(Markdown.anchorLink(p.name(), p.name()), Comment.parse(p).getSummary()))
                     .collect(Collectors.joining()) +
                 newLine();
     }
 
-    private static String packageClasses(PackageDoc pkg, String baseurl) {
-        return  classTable("Interfaces", pkg.interfaces(), baseurl) +
+    private String packageClasses(PackageDoc pkg) {
+        return  classTable("Interfaces", pkg.interfaces()) +
 //                classTable("Enums", enums(pkg)) +
-                classTable("Classes", pkg.ordinaryClasses(), baseurl) +
-                classTable("Exceptions", pkg.exceptions(), baseurl);
+                classTable("Classes", pkg.ordinaryClasses()) +
+                classTable("Exceptions", pkg.exceptions());
     }
 
-    private static String classTable(String type, ClassDoc[] classes, String baseurl) {
+    private String classTable(String type, ClassDoc[] classes) {
         return classes.length == 0 ? "" :
                 Markdown.h1(type) +
                 Markdown.tableHeader(type, "Description") +
                 Arrays.stream(classes).sorted()
                     .map(c -> Markdown.tableRow(
-                            linkSite(c.name(), baseurl + "/classes#" + c.name().toLowerCase()),
-                            Comment.parse(c).getSummary()))
+                                    siteLink(c.name(), sectionUrl + "/classes#" + c.name().toLowerCase()),
+                                    Comment.parse(c).getSummary()))
                     .collect(Collectors.joining()) +
                 newLine();
     }
+
 
 
 }

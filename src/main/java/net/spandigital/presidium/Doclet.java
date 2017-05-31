@@ -4,6 +4,7 @@
 package net.spandigital.presidium;
 
 import com.sun.javadoc.*;
+import com.sun.tools.javac.util.List;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,41 +14,47 @@ import java.nio.file.Paths;
 
 public class Doclet {
 
+    private static final List<String> opts = List.of("-d", "-t", "-u");//, "-doctitle", "-windowtitle");
+
     public static boolean start(RootDoc root) throws IOException {
-        Path target = targetPath(root);
-        clean(target);
+        Path destination = Paths.get(option(root, "-d", "docs"));
+        String title = option(root, "-t", "javadoc");
+        String url = option(root, "-u", "reference/javadoc");
 
-        String name = "Java Time";
-        String url = "reference/java-time";
+        clean(destination);
 
-        Files.createDirectories(target);
-        FileWriter.writeIndex(target, name);
+        Files.createDirectories(destination);
 
-        PackageWriter.writeAll(target.resolve("01-Packages"), url, root);
-        ClassWriter.writeAll(target.resolve("02-Classes"), root);
+        PackageWriter.init(root, destination.resolve("01-Packages"), url)
+                .writeAll();
+
+        ClassWriter.init(root, destination.resolve("02-Classes"), url)
+                .writeAll();
+
+        FileWriter.writeIndex(destination, title);
 
         return true;
     }
 
     /**
-     * Support additional options
+     * Allow custom doclet opts
      * @param option
      * @return
      */
     public static int optionLength(String option) {
-        if (option.equals("-d") || option.equals("-doctitle") || option.equals("-windowtitle")) {
+        if (opts.contains(option)) {
             return 2;
         }
         return 0;
     }
 
-    private static Path targetPath(RootDoc root) {
+    private static String option(RootDoc root, String option, String defaultValue) {
         for (String[] opt : root.options()) {
-            if (opt[0].equals("-d")) {
-                return Paths.get(opt[1]);
+            if (opt[0].equals(option)) {
+                return opt[1];
             }
         }
-        return Paths.get(System.getProperty("user.dir") + "/docs/presidium");
+        return defaultValue;
     }
 
     private static void clean(Path target) throws IOException {

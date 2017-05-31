@@ -16,23 +16,35 @@ import java.util.stream.Collectors;
  */
 public class ClassWriter {
 
-    public static void writeAll(Path target, RootDoc root) throws IOException {
+    private RootDoc root;
+    private Path destination;
+    private String sectionUrl;
+
+    public static ClassWriter init(RootDoc root, Path destination, String sectionUrl) {
+        ClassWriter writer = new ClassWriter();
+        writer.root = root;
+        writer.destination = destination;
+        writer.sectionUrl = sectionUrl;
+        return writer;
+    }
+
+    public void writeAll() throws IOException {
 
         List<ClassDoc> classes = Arrays.stream(root.classes())
                 .sorted(Comparator.comparing(ClassDoc::name))
                 .collect(Collectors.toList());
 
-        Files.createDirectories(target);
-        FileWriter.writeIndex(target, "Classes");
+        Files.createDirectories(destination);
+        FileWriter.writeIndex(destination, "Classes");
 
         int i = 0;
         for (ClassDoc cls : classes) {
-            Path file = target.resolve(Markdown.fileName(i++, cls.name()));
-            ClassWriter.write(file, cls);
+            Path file = destination.resolve(Markdown.fileName(i++, cls.name()));
+            write(file, cls);
         }
     }
 
-    public static void write(Path file, ClassDoc cls) throws IOException {
+    public void write(Path file, ClassDoc cls) throws IOException {
         FileWriter.write(file, Markdown.join(
                 Markdown.frontMatter(cls.name()),
                 header(cls),
@@ -40,10 +52,10 @@ public class ClassWriter {
         ));
     }
 
-    private static String header(ClassDoc cls) {
+    private String header(ClassDoc cls) {
         String containingPackage = cls.containingPackage().name();
         return Markdown.join(
-                Markdown.linkSite(containingPackage, "/packages/#" + containingPackage),
+                Markdown.siteLink(containingPackage, sectionUrl + "/packages/#" + containingPackage),
                 Markdown.h1(title(cls))
         );
     }

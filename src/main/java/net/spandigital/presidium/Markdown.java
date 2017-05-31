@@ -50,11 +50,11 @@ public class Markdown {
         return String.format("[%s](%s)", value, target);
     }
 
-    public static String linkSite(String value, String target) {
+    public static String siteLink(String value, String target) {
         return String.format("[%s]({{'%s' | relative_url }})", value, target);
     }
 
-    public static String linkAnchor(String value, String target) {
+    public static String anchorLink(String value, String target) {
         return String.format("[%s](#%s)", value, target);
     }
 
