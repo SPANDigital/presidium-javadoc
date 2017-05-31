@@ -42,23 +42,19 @@ public class Markdown {
         return newLine() + String.join("", Collections.nCopies(level, "#")) + " " + title + newLine(2);
     }
 
-//    public static String h2(String header) {
-//        return newLine()"\n\n## " + header + newLine();
-//    }
-//
-//    public static String h3(String header) {
-//        return "\n\n### " + header + "\n\n";
-//    }
-
     public static String fileName(int order, String name) {
         return String.format("%03d-%s.md", order, name);
     }
 
-    public static String link(String target, String value) {
+    public static String link(String value, String target) {
         return String.format("[%s](%s)", value, target);
     }
 
-    public static String linkAnchor(String target, String value) {
+    public static String linkSite(String value, String target) {
+        return String.format("[%s]({{'%s' | relative_url }})", value, target);
+    }
+
+    public static String linkAnchor(String value, String target) {
         return String.format("[%s](#%s)", value, target);
     }
 

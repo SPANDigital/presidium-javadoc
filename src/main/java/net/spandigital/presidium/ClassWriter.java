@@ -43,7 +43,7 @@ public class ClassWriter {
     private static String header(ClassDoc cls) {
         String containingPackage = cls.containingPackage().name();
         return Markdown.join(
-                Markdown.link("../packages/#" + containingPackage, containingPackage),
+                Markdown.linkSite(containingPackage, "/packages/#" + containingPackage),
                 Markdown.h1(title(cls))
         );
     }

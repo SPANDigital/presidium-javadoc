@@ -17,7 +17,13 @@ public class Doclet {
         Path target = targetPath(root);
         clean(target);
 
-        PackageWriter.writeAll(target.resolve("01-Packages"), root);
+        String name = "Java Time";
+        String url = "reference/java-time";
+
+        Files.createDirectories(target);
+        FileWriter.writeIndex(target, name);
+
+        PackageWriter.writeAll(target.resolve("01-Packages"), url, root);
         ClassWriter.writeAll(target.resolve("02-Classes"), root);
 
         return true;

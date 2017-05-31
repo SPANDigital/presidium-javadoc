@@ -33,7 +33,7 @@ public class DocletRunner {
                 "-sourcepath", System.getProperty("user.dir") + "/src/test/resources",
                 "-subpackages", "java.time",
 //                "-d", System.getProperty("user.dir") + "/docs/test"
-                "-d", "/Users/paco/Workspace/span/presidium/presidium/content/_reference/Time API"
+                "-d", "/Users/paco/Workspace/span/presidium/presidium-pm/content/_reference/Time API"
         });
     }
 

@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.spandigital.presidium.Markdown.link;
+import static net.spandigital.presidium.Markdown.linkSite;
 import static net.spandigital.presidium.Markdown.newLine;
 
 /**
@@ -21,7 +21,7 @@ import static net.spandigital.presidium.Markdown.newLine;
  */
 public class PackageWriter {
 
-    public static void writeAll(Path target, RootDoc root) throws IOException {
+    public static void writeAll(Path target, String baseurl, RootDoc root) throws IOException {
 
         List<PackageDoc> packages = Arrays.stream(root.classes())
                 .map(ClassDoc::containingPackage)
@@ -37,7 +37,7 @@ public class PackageWriter {
         int i = 1;
         for (PackageDoc pkg : packages) {
             Path file = target.resolve(Markdown.fileName(i++, pkg.name()));
-            writeArticle(file, pkg);
+            writeArticle(file, pkg, baseurl);
         }
     }
 
@@ -49,12 +49,12 @@ public class PackageWriter {
         ));
     }
 
-    private static void writeArticle(Path file, PackageDoc pkg) {
+    private static void writeArticle(Path file, PackageDoc pkg, String baseurl) {
         Comment comment = Comment.parse(pkg);
         FileWriter.write(file, Markdown.join(
                 Markdown.frontMatter(pkg.name()),
                 comment.getSummary(),
-                packageClasses(pkg),
+                packageClasses(pkg, baseurl),
                 Markdown.h1( "Package Description"),
                 comment.getBody()
         ));
@@ -65,25 +65,25 @@ public class PackageWriter {
                 Markdown.tableHeader("Package", "Description") +
                 packages.stream()
                     .sorted()
-                    .map(p -> Markdown.tableRow(Markdown.link(p.name(), p.name()), Comment.parse(p).getSummary()))
+                    .map(p -> Markdown.tableRow(Markdown.linkAnchor(p.name(), p.name()), Comment.parse(p).getSummary()))
                     .collect(Collectors.joining()) +
                 newLine();
     }
 
-    private static String packageClasses(PackageDoc pkg) {
-        return  classTable("Interfaces", pkg.interfaces()) +
-                classTable("Enums", pkg.enums()) +
-                classTable("Classes", pkg.ordinaryClasses()) +
-                classTable("Exceptions", pkg.exceptions());
+    private static String packageClasses(PackageDoc pkg, String baseurl) {
+        return  classTable("Interfaces", pkg.interfaces(), baseurl) +
+//                classTable("Enums", enums(pkg)) +
+                classTable("Classes", pkg.ordinaryClasses(), baseurl) +
+                classTable("Exceptions", pkg.exceptions(), baseurl);
     }
 
-    private static String classTable(String type, ClassDoc[] classes) {
+    private static String classTable(String type, ClassDoc[] classes, String baseurl) {
         return classes.length == 0 ? "" :
                 Markdown.h1(type) +
                 Markdown.tableHeader(type, "Description") +
                 Arrays.stream(classes).sorted()
                     .map(c -> Markdown.tableRow(
-                            link("../classes#" + c.name().toLowerCase(), c.name()),
+                            linkSite(c.name(), baseurl + "/classes#" + c.name().toLowerCase()),
                             Comment.parse(c).getSummary()))
                     .collect(Collectors.joining()) +
                 newLine();
