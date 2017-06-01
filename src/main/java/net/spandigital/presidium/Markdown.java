@@ -1,5 +1,10 @@
 package net.spandigital.presidium;
 
+import com.sun.javadoc.Doc;
+import com.sun.javadoc.ProgramElementDoc;
+
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,6 +51,10 @@ public class Markdown {
         return String.format("%03d-%s.md", order, name);
     }
 
+    public static String anchor(ProgramElementDoc element) {
+        return String.format("<span class=\"anchor\" id=\"%s\"></span>", element.qualifiedName());
+    }
+
     public static String link(String value, String target) {
         return String.format("[%s](%s)", value, target);
     }
@@ -87,9 +96,21 @@ public class Markdown {
                 .collect(Collectors.joining()) + Markdown.newLine();
     }
 
-    public static String parseContent(String content) {
-        return "";
+    public static String summary(Doc doc) {
+        //TODO improve for other edge cases
+        return new BufferedReader(new StringReader(doc.commentText()))
+                .lines()
+                .filter(l -> !l.equalsIgnoreCase("<p>"))
+                .findFirst()
+                .orElse("");
     }
 
+    public static String content(Doc doc) {
+        //TODO parse and edit tags
+        //doc.inlineTags();
+        return doc.commentText()
+                .replaceAll("<p>", Markdown.newLine())
+                .replaceAll("</p>", "");
+    }
 
 }

@@ -65,13 +65,12 @@ public class PackageWriter {
     }
 
     private void writeArticle(Path file, PackageDoc pkg) {
-        Comment comment = Comment.parse(pkg);
         FileWriter.write(file, Markdown.join(
                 Markdown.frontMatter(pkg.name()),
-                comment.getSummary(),
+                Markdown.summary(pkg),
                 packageClasses(pkg),
                 Markdown.h1( "Package Description"),
-                comment.getBody()
+                Markdown.content(pkg)
         ));
     }
 
@@ -80,7 +79,7 @@ public class PackageWriter {
                 Markdown.tableHeader("Package", "Description") +
                 packages.stream()
                     .sorted()
-                    .map(p -> Markdown.tableRow(Markdown.anchorLink(p.name(), p.name()), Comment.parse(p).getSummary()))
+                    .map(p -> Markdown.tableRow(Markdown.anchorLink(p.name(), p.name()), Markdown.summary(p)))
                     .collect(Collectors.joining()) +
                 newLine();
     }
@@ -96,12 +95,12 @@ public class PackageWriter {
         return classes.length == 0 ? "" :
                 Markdown.h1(type) +
                 Markdown.tableHeader(type, "Description") +
-                Arrays.stream(classes).sorted()
-                    .map(c -> Markdown.tableRow(
-                                    siteLink(c.name(), sectionUrl + "/classes#" + c.name().toLowerCase()),
-                                    Comment.parse(c).getSummary()))
-                    .collect(Collectors.joining()) +
-                newLine();
+                Arrays.stream(classes)
+                        .sorted()
+                        .map(c -> Markdown.tableRow(
+                                    siteLink(c.name(), sectionUrl + "/classes#" + c.qualifiedName()),
+                                    Markdown.content(c)))
+                        .collect(Collectors.joining()) +  newLine();
     }
 
 
