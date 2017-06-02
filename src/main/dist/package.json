@@ -1,12 +1,12 @@
 {
   "name": "presidium-javadoc",
-  "version": "0.1.0",
-  "description": "Presidium javadoc ingestor",
+  "version": "0.1.1",
+  "description": "Presidium Javadoc Ingestion",
   "license": "Apache-2.0",
   "homepage": "http://presidium.spandigital.net/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SPANDigital/presidium"
+    "url": "https://github.com/SPANDigital/presidium-javadoc"
   },
   "authors": [
     {
