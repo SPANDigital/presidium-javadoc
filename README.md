@@ -43,7 +43,7 @@ $ javadoc -sourcepath <src-path> -doclet net.spandigital.presidium.Doclet -docle
 ## Gradle
 Include a custom doclet with the [gradle javadoc task](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.javadoc.Javadoc.html)
 
-### npm
+## npm
 
 Include as part of the npm build building your Presidium site as in the following sample:
 
