@@ -12,10 +12,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.spandigital.presidium.Markdown.siteLink;
-import static net.spandigital.presidium.Markdown.newLine;
+import static net.spandigital.presidium.Markdown.*;
 
 /**
+ * Generate package-level javadoc in markdown.
  *
  * @author Paco Mendes
  */
@@ -33,8 +33,7 @@ public class PackageWriter {
         return writer;
     }
 
-    private PackageWriter() {
-    }
+    private PackageWriter() {}
 
     public void writeAll() throws IOException {
 
@@ -51,37 +50,41 @@ public class PackageWriter {
 
         int i = 1;
         for (PackageDoc pkg : packages) {
-            Path file = destination.resolve(Markdown.fileName(i++, pkg.name()));
+            String name = FileWriter.fileName(i++, pkg.name());
+            Path file = destination.resolve(name);
             writeArticle(file, pkg);
         }
     }
 
     private void writePackageList(List<PackageDoc> packages) {
-        Path file = destination.resolve(Markdown.fileName(0, "package-summary"));
+        String name = FileWriter.fileName(0, "package-summary");
+        Path file = destination.resolve(name);
         FileWriter.write(file, Markdown.join(
-                Markdown.frontMatter("Packages"),
+                frontMatter("Packages"),
                 packageList(packages)
         ));
     }
 
     private void writeArticle(Path file, PackageDoc pkg) {
         FileWriter.write(file, Markdown.join(
-                Markdown.frontMatter(pkg.name()),
-                Markdown.summary(pkg),
+                frontMatter(pkg.name()),
+                docSummary(pkg),
                 packageClasses(pkg),
-                Markdown.h1( "Package Description"),
-                Markdown.content(pkg)
+                h1( "Package Description"),
+                docComment(pkg)
         ));
     }
 
     private static String packageList(List<PackageDoc> packages) {
         return packages.size() == 0 ? "" :
-                Markdown.tableHeader("Package", "Description") +
-                packages.stream()
-                    .sorted()
-                    .map(p -> Markdown.tableRow(Markdown.anchorLink(p.name(), p.name()), Markdown.summary(p)))
-                    .collect(Collectors.joining()) +
-                newLine();
+                Markdown.join(
+                    tableHeader("Package", "Description"),
+                    packages.stream()
+                            .sorted()
+                            .map(p -> tableRow(anchorLink(p.name(), p.name()), docSummary(p)))
+                            .collect(Collectors.joining()),
+                    newLine()
+                );
     }
 
     private String packageClasses(PackageDoc pkg) {
@@ -93,16 +96,17 @@ public class PackageWriter {
 
     private String classTable(String type, ClassDoc[] classes) {
         return classes.length == 0 ? "" :
-                Markdown.h1(type) +
-                Markdown.tableHeader(type, "Description") +
-                Arrays.stream(classes)
-                        .sorted()
-                        .map(c -> Markdown.tableRow(
+                Markdown.join(
+                    h1(type),
+                    tableHeader(type, "Description"),
+                    Arrays.stream(classes)
+                            .sorted()
+                            .map(c -> tableRow(
                                     siteLink(c.name(), sectionUrl + "/classes#" + c.qualifiedName()),
-                                    Markdown.summary(c)))
-                        .collect(Collectors.joining()) +  newLine();
+                                    docSummary(c)))
+                            .collect(Collectors.joining()),
+                    newLine()
+                );
     }
-
-
 
 }

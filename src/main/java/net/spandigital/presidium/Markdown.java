@@ -11,7 +11,8 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 /**
- * Created by paco on 2017/05/26.
+ * Markdown generation methods.
+ * @author Paco Mendes
  */
 public class Markdown {
 
@@ -44,17 +45,12 @@ public class Markdown {
         return newLine() + String.join("", Collections.nCopies(level, "#")) + " " + title + newLine(2);
     }
 
-
     public static String quote(String text) {
         return String.format("%s> %s%s", Markdown.newLine(), text, Markdown.newLine());
     }
 
     public static String hr() {
         return Markdown.newLine(2) + "---" + Markdown.newLine();
-    }
-
-    public static String fileName(int order, String name) {
-        return String.format("%03d-%s.md", order, name);
     }
 
     public static String anchor(ProgramElementDoc element) {
@@ -88,7 +84,7 @@ public class Markdown {
         }
         header.append(Markdown.newLine());
         header.append(String.join("", Collections.nCopies(titles.length, "|:---")));
-        header.append(Markdown.newLine());
+//        header.append(Markdown.newLine());
         return header.toString();
     }
 
@@ -102,7 +98,7 @@ public class Markdown {
                 .collect(Collectors.joining()) + Markdown.newLine();
     }
 
-    public static String summary(Doc doc) {
+    public static String docSummary(Doc doc) {
         //TODO improve for other edge cases
         return new BufferedReader(new StringReader(doc.commentText()))
                 .lines()
@@ -111,7 +107,7 @@ public class Markdown {
                 .orElse("");
     }
 
-    public static String content(Doc doc) {
+    public static String docComment(Doc doc) {
         //TODO parse and edit tags
         //doc.inlineTags();
         //Simple cleanup to assist with layout

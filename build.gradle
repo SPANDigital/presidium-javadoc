@@ -1,6 +1,5 @@
 group 'net.spandigital.presidium'
-version '0.0.1'
-
+version '0.1.0'
 apply plugin: 'application'
 
 sourceCompatibility = 1.8
@@ -10,6 +9,14 @@ mainClassName = "net.spandigital.presidium.Main"
 repositories {
     mavenCentral()
 }
+
+task copyDist(type: Copy) {
+    from 'README.md'
+    from 'NOTICE'
+    from 'LICENSE'
+    into 'src/main/dist'
+}
+compileJava.dependsOn copyDist
 
 dependencies {
     compile 'commons-cli:commons-cli:1.4'

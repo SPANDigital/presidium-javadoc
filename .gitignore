@@ -24,3 +24,7 @@ hs_err_pid*
 .idea
 build
 *.ipr
+/src/main/dist/README.md
+/src/main/dist/NOTICE
+/src/main/dist/LICENSE
+*.iws

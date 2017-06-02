@@ -1,0 +1,24 @@
+{
+  "name": "presidium-javadoc",
+  "version": "0.1.0",
+  "description": "Presidium javadoc ingestor",
+  "license": "Apache-2.0",
+  "homepage": "http://presidium.spandigital.net/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SPANDigital/presidium"
+  },
+  "authors": [
+    {
+      "name": "Paco Mendes",
+      "email": "paco.mendes@spandigital.com"
+    },
+    {
+      "name": "Presidium",
+      "email": "presidium@spandigital.com"
+    }
+  ],
+  "bin": {
+    "presidium-javadoc": "./bin/presidium-javadoc"
+  }
+}

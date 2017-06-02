@@ -1,6 +1,9 @@
 package net.spandigital.presidium;
 
-import com.sun.javadoc.*;
+import com.sun.javadoc.ClassDoc;
+import com.sun.javadoc.ExecutableMemberDoc;
+import com.sun.javadoc.RootDoc;
+import com.sun.javadoc.Type;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,6 +17,8 @@ import java.util.stream.Collectors;
 import static net.spandigital.presidium.Markdown.*;
 
 /**
+ * Build markdown article for a class
+ *
  * @author Paco Mendes
  */
 public class ClassWriter {
@@ -46,32 +51,33 @@ public class ClassWriter {
 
         int i = 0;
         for (ClassDoc cls : classes) {
-            Path file = destination.resolve(Markdown.fileName(i++, cls.name()));
+            Path file = destination.resolve(FileWriter.fileName(i++, cls.name()));
             write(file, cls);
         }
     }
 
     public void write(Path file, ClassDoc cls) throws IOException {
-        FileWriter.write(file, Markdown.join(
-                Markdown.frontMatter(cls.name()),
-                header(cls),
-                Markdown.newLine(),
-                Markdown.summary(cls),
-                Markdown.newLine(),
-                constructorList(cls),
-                methodList(cls),
-                classDescription(cls),
-                constructorDetail(cls),
-                methodDetail(cls)
+        FileWriter.write(file,
+                Markdown.join(
+                    frontMatter(cls.name()),
+                    header(cls),
+                    newLine(),
+                    docSummary(cls),
+                    newLine(),
+                    constructorList(cls),
+                    methodList(cls),
+                    classDescription(cls),
+                    constructorDetail(cls),
+                    methodDetail(cls)
         ));
     }
 
     private String header(ClassDoc cls) {
         String containingPackage = cls.containingPackage().name();
         return Markdown.join(
-                Markdown.anchor(cls),
+                anchor(cls),
                 Markdown.siteLink(containingPackage, sectionUrl + "/packages/#" + containingPackage),
-                Markdown.h1(title(cls))
+                h1(title(cls))
         );
     }
 
@@ -88,45 +94,65 @@ public class ClassWriter {
         }
     }
 
-    private String constructorList(ClassDoc cls) {
+    private enum ClassType {
+        CLASS,
+        ENUM,
+        INTERFACE,
+        UNKNOWN
+    }
 
+    private static ClassType classType(ClassDoc cls) {
+        if (cls.superclass() != null && "java.lang.Enum".equals(cls.superclass().qualifiedName())) {
+            return ClassType.ENUM;
+        }
+
+        if (cls.isOrdinaryClass()) {
+            return ClassType.CLASS;
+        }
+
+        if (cls.isInterface()) {
+            return ClassType.INTERFACE;
+        }
+        return ClassType.UNKNOWN;
+    }
+
+    private String constructorList(ClassDoc cls) {
         return cls.constructors().length == 0 ? "" :
-                Markdown.h1("Constructor Summary") +
-                        Markdown.tableHeader("Modifiers", "Constructor") +
-                        Arrays.stream(cls.constructors())
-                                .sorted()
-                                .map(c -> Markdown.tableRow(
-                                        c.modifiers(),
-                                        this.methodLink(c)))
-                                .collect(Collectors.joining()) +  newLine();
+                Markdown.join(
+                    h1("Constructor Summary"),
+                    tableHeader("Modifiers", "Constructor"),
+                    Arrays.stream(cls.constructors())
+                            .sorted()
+                            .map(c -> tableRow(c.modifiers(), this.methodLink(c)))
+                            .collect(Collectors.joining()),
+                    newLine()
+                );
     }
 
     private String methodList(ClassDoc cls) {
-
-        return cls.methods().length == 0 ? "" :
-                Markdown.h1("Method Summary") +
-                        Markdown.tableHeader("Modifiers", "Return", "Method") +
+        return (cls.methods().length == 0) ? "" :
+                Markdown.join(
+                        h1("Method Summary"),
+                        tableHeader("Modifiers", "Return", "Method"),
                         Arrays.stream(cls.methods())
                                 .sorted()
-                                .map(m -> Markdown.tableRow(
-                                        m.modifiers(),
-                                        this.typeLink(m.returnType()),
-                                        this.methodLink(m)))
-                                .collect(Collectors.joining()) +  newLine();
+                                .map(m -> tableRow(m.modifiers(), this.typeLink(m.returnType()), this.methodLink(m)))
+                                .collect(Collectors.joining())
+                );
     }
 
 
     private String classDescription(ClassDoc cls) {
-        String comment = Markdown.content(cls);
-        return comment.length() == 0 ? ""  :
-            Markdown.join(
-                    Markdown.h1("Description"),
-                    Markdown.content(cls)
-            );
+        String comment = docComment(cls);
+        return (comment.length() == 0) ? "" :
+                Markdown.join(
+                        h1("Description"),
+                        comment
+                );
     }
 
     /**
-     * Generates a link for a type if it's know
+     * Generates a link for a type if it's know to this documentation scope.
      * @param type
      * @return
      */
@@ -146,10 +172,10 @@ public class ClassWriter {
     private String constructorDetail(ClassDoc cls) {
         return cls.constructors().length == 0 ? "" :
                 Markdown.join(
-                        Markdown.h1("Constructor Detail"),
+                        h1("Constructor Detail"),
                         Arrays.stream(cls.constructors())
                             .map(c -> memberDetail(c))
-                            .collect(Collectors.joining(Markdown.newLine()))
+                            .collect(Collectors.joining(newLine()))
                 );
 
     }
@@ -157,58 +183,31 @@ public class ClassWriter {
     private String methodDetail(ClassDoc cls) {
         return cls.methods().length == 0 ? "" :
                 Markdown.join(
-                        Markdown.h1("Method Detail"),
-                        Markdown.anchor(cls),
+                        h1("Method Detail"),
+                        anchor(cls),
                         Arrays.stream(cls.methods())
                                 .map(m -> memberDetail(m))
-                                .collect(Collectors.joining(Markdown.newLine()))
+                                .collect(Collectors.joining(newLine()))
                 );
 
     }
 
     private String memberDetail(ExecutableMemberDoc member) {
-        String params = Arrays.stream(member.parameters())
-                .map(p ->  String.format("%s %s", typeLink(p.type()), p.name()))
-                .collect(Collectors.joining(", "));
-        String signature = String.format("%s ( %s )", member.name(), params);
         return Markdown.join(
-            Markdown.hr(),
-            Markdown.anchor(member),
-            Markdown.h2(member.name()),
-            Markdown.quote(signature),
-            Markdown.content(member),
-            Markdown.newLine()
+            hr(),
+            anchor(member),
+            h2(member.name()),
+            quote(methodSignature(member)),
+            docComment(member),
+            newLine()
         );
     }
 
-    private static String extendsClass(ClassDoc cls) {
-        if (!cls.isInterface()) {
-            return cls.superclass().name();
-        }
-        return "";
-    }
-
-    private enum ClassType {
-        CLASS,
-        ENUM,
-        INTERFACE,
-        UNKNOWN
-    }
-
-    private static ClassType classType(ClassDoc cls) {
-
-        if (cls.superclass() != null && "java.lang.Enum".equals(cls.superclass().qualifiedName())) {
-            return ClassType.ENUM;
-        }
-
-        if (cls.isOrdinaryClass()) {
-            return ClassType.CLASS;
-        }
-
-        if (cls.isInterface()) {
-            return ClassType.INTERFACE;
-        }
-        return ClassType.UNKNOWN;
+    private String methodSignature(ExecutableMemberDoc member) {
+        String params = Arrays.stream(member.parameters())
+                .map(p ->  String.format("%s %s", typeLink(p.type()), p.name()))
+                .collect(Collectors.joining(", "));
+        return String.format("%s ( %s )", member.name(), params);
     }
 
 }

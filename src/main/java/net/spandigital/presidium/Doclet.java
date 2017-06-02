@@ -3,7 +3,7 @@
  */
 package net.spandigital.presidium;
 
-import com.sun.javadoc.*;
+import com.sun.javadoc.RootDoc;
 import com.sun.tools.javac.util.List;
 
 import java.io.File;
@@ -24,20 +24,16 @@ public class Doclet {
         clean(destination);
 
         Files.createDirectories(destination);
-
-        PackageWriter.init(root, destination.resolve("01-Packages"), url)
-                .writeAll();
-
-        ClassWriter.init(root, destination.resolve("02-Classes"), url)
-                .writeAll();
-
         FileWriter.writeIndex(destination, title);
+        PackageWriter.init(root, destination.resolve("01-Packages"), url).writeAll();
+        ClassWriter.init(root, destination.resolve("02-Classes"), url).writeAll();
 
         return true;
     }
 
     /**
      * Allow custom doclet opts
+     *
      * @param option
      * @return
      */

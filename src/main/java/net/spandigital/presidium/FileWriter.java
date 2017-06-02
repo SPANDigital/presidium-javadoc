@@ -10,6 +10,10 @@ import java.nio.file.Path;
  */
 public class FileWriter {
 
+    public static String fileName(int order, String name) {
+        return String.format("%03d-%s.md", order, name);
+    }
+
     public static void writeIndex(Path path, String title) {
         write(path.resolve("index.md"), Markdown.frontMatter(title));
     }
