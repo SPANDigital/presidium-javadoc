@@ -16,15 +16,12 @@ import java.util.stream.Collectors;
 public class Markdown {
 
     public static String frontMatter(String title) {
-        return String.format(
-                "---" +
-                        "\n" +
-                        "title: %s" +
-                        "\n" +
-                        "---" +
-                        "\n",
-
-                title);
+        return Markdown.join(
+                "---",
+                "title: " + title,
+                "---",
+                Markdown.newLine()
+        );
     }
 
     public static String join(String... elements) {
@@ -45,6 +42,15 @@ public class Markdown {
 
     private static String h(int level, String title) {
         return newLine() + String.join("", Collections.nCopies(level, "#")) + " " + title + newLine(2);
+    }
+
+
+    public static String quote(String text) {
+        return String.format("%s> %s%s", Markdown.newLine(), text, Markdown.newLine());
+    }
+
+    public static String hr() {
+        return Markdown.newLine(2) + "---" + Markdown.newLine();
     }
 
     public static String fileName(int order, String name) {
@@ -108,9 +114,14 @@ public class Markdown {
     public static String content(Doc doc) {
         //TODO parse and edit tags
         //doc.inlineTags();
+        //Simple cleanup to assist with layout
         return doc.commentText()
                 .replaceAll("<p>", Markdown.newLine())
-                .replaceAll("</p>", "");
+                .replaceAll("</p>", "")
+                .replaceAll("<ul>", "")
+                .replaceAll("</ul>", "")
+                .replaceAll("</li>", "")
+                .replaceAll("<li>", "- ");
     }
 
 }

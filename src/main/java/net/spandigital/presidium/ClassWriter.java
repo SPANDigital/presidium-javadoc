@@ -1,9 +1,6 @@
 package net.spandigital.presidium;
 
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.RootDoc;
-import com.sun.javadoc.Type;
+import com.sun.javadoc.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -61,9 +58,11 @@ public class ClassWriter {
                 Markdown.newLine(),
                 Markdown.summary(cls),
                 Markdown.newLine(),
-                constructors(cls),
-                methods(cls),
-                Markdown.content(cls)
+                constructorList(cls),
+                methodList(cls),
+                classDescription(cls),
+                constructorDetail(cls),
+                methodDetail(cls)
         ));
     }
 
@@ -89,23 +88,23 @@ public class ClassWriter {
         }
     }
 
-    private static String constructors(ClassDoc cls) {
+    private String constructorList(ClassDoc cls) {
 
         return cls.constructors().length == 0 ? "" :
-                Markdown.h1("Constructors") +
+                Markdown.h1("Constructor Summary") +
                         Markdown.tableHeader("Modifiers", "Constructor") +
                         Arrays.stream(cls.constructors())
                                 .sorted()
                                 .map(c -> Markdown.tableRow(
                                         c.modifiers(),
-                                        anchorLink(c.name() + c.signature(), c.name())))
+                                        this.methodLink(c)))
                                 .collect(Collectors.joining()) +  newLine();
     }
 
-    private String methods(ClassDoc cls) {
+    private String methodList(ClassDoc cls) {
 
         return cls.methods().length == 0 ? "" :
-                Markdown.h1("Methods") +
+                Markdown.h1("Method Summary") +
                         Markdown.tableHeader("Modifiers", "Return", "Method") +
                         Arrays.stream(cls.methods())
                                 .sorted()
@@ -116,6 +115,15 @@ public class ClassWriter {
                                 .collect(Collectors.joining()) +  newLine();
     }
 
+
+    private String classDescription(ClassDoc cls) {
+        String comment = Markdown.content(cls);
+        return comment.length() == 0 ? ""  :
+            Markdown.join(
+                    Markdown.h1("Description"),
+                    Markdown.content(cls)
+            );
+    }
 
     /**
      * Generates a link for a type if it's know
@@ -128,12 +136,49 @@ public class ClassWriter {
                 type.typeName();
     }
 
-    private String methodLink(MethodDoc method) {
-
+    private String methodLink(ExecutableMemberDoc method) {
         String params = Arrays.stream(method.parameters())
                 .map(p ->  String.format("%s %s", typeLink(p.type()), p.name()))
                 .collect(Collectors.joining(", "));
         return String.format("%s ( %s )", anchorLink(method.name(), method.qualifiedName()), params);
+    }
+
+    private String constructorDetail(ClassDoc cls) {
+        return cls.constructors().length == 0 ? "" :
+                Markdown.join(
+                        Markdown.h1("Constructor Detail"),
+                        Arrays.stream(cls.constructors())
+                            .map(c -> memberDetail(c))
+                            .collect(Collectors.joining(Markdown.newLine()))
+                );
+
+    }
+
+    private String methodDetail(ClassDoc cls) {
+        return cls.methods().length == 0 ? "" :
+                Markdown.join(
+                        Markdown.h1("Method Detail"),
+                        Markdown.anchor(cls),
+                        Arrays.stream(cls.methods())
+                                .map(m -> memberDetail(m))
+                                .collect(Collectors.joining(Markdown.newLine()))
+                );
+
+    }
+
+    private String memberDetail(ExecutableMemberDoc member) {
+        String params = Arrays.stream(member.parameters())
+                .map(p ->  String.format("%s %s", typeLink(p.type()), p.name()))
+                .collect(Collectors.joining(", "));
+        String signature = String.format("%s ( %s )", member.name(), params);
+        return Markdown.join(
+            Markdown.hr(),
+            Markdown.anchor(member),
+            Markdown.h2(member.name()),
+            Markdown.quote(signature),
+            Markdown.content(member),
+            Markdown.newLine()
+        );
     }
 
     private static String extendsClass(ClassDoc cls) {

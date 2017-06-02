@@ -99,7 +99,7 @@ public class PackageWriter {
                         .sorted()
                         .map(c -> Markdown.tableRow(
                                     siteLink(c.name(), sectionUrl + "/classes#" + c.qualifiedName()),
-                                    Markdown.content(c)))
+                                    Markdown.summary(c)))
                         .collect(Collectors.joining()) +  newLine();
     }
 
