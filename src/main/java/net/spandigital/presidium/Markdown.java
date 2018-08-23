@@ -109,6 +109,10 @@ public class Markdown {
 
     public static String docComment(Doc doc) {
         //TODO parse and edit tags
+        //code
+        //links
+        //...
+
         //doc.inlineTags();
         //Simple cleanup to assist with layout
         return doc.commentText()
@@ -117,7 +121,11 @@ public class Markdown {
                 .replaceAll("<ul>", "")
                 .replaceAll("</ul>", "")
                 .replaceAll("</li>", "")
-                .replaceAll("<li>", "- ");
+                .replaceAll("<li>", "- ")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("<pre>", "```")
+                .replaceAll("</pre>", "```");
     }
 
 }

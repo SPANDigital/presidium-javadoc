@@ -18,6 +18,7 @@ public class DocletRunner {
 
     private static void buildMarkdown() throws IOException {
         String targetDir = System.getProperty("user.dir") + "/javadoc-output";
+        String userDir = System.getProperty("user.dir");
         Files.createDirectories(FileSystems.getDefault().getPath(targetDir));
 
         /*
@@ -30,17 +31,16 @@ public class DocletRunner {
             output - a directory, relative to the project
         */
         Main.execute("Markdown Generator", "net.spandigital.presidium.Doclet", new String[]{
-                "-sourcepath", System.getProperty("user.dir") + "/src/test/resources",
-                "-subpackages", "java.time",
-//                "-d", System.getProperty("user.dir") + "/docs/test"
-                "-d", "/Users/paco/Workspace/span/presidium/presidium-pm/docComment/_reference/Time API"
+                "-sourcepath", userDir + "/src/test/resources",
+                "-subpackages", "net.spandigital.presidium",
+                "-d", userDir + "/docs/markdown"
         });
     }
 
     private static void buildJavadoc() {
         Main.execute(new String[]{
-                "-sourcepath", "/Users/paco/Workspace/span/presidium/javadoc/doclet/src/main/java",
-                "-subpackages", "java.time",
+                "-sourcepath", System.getProperty("user.dir") + "/src/test/resources",
+                "-subpackages", "net.spandigital.presidium",
                 "-d", System.getProperty("user.dir") + "/docs/javadoc"
         });
 

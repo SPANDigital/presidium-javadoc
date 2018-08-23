@@ -1,9 +1,6 @@
 package net.spandigital.presidium;
 
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.ExecutableMemberDoc;
-import com.sun.javadoc.RootDoc;
-import com.sun.javadoc.Type;
+import com.sun.javadoc.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -130,6 +127,10 @@ public class ClassWriter {
     }
 
     private String methodList(ClassDoc cls) {
+        MethodDoc[] methods = cls.methods();
+        MethodDoc generic_method = methods[2];
+        Type type = generic_method.returnType();
+        System.out.printf("%s %s %s", type.qualifiedTypeName(), type.typeName(), type.simpleTypeName());
         return (cls.methods().length == 0) ? "" :
                 Markdown.join(
                         h1("Method Summary"),
