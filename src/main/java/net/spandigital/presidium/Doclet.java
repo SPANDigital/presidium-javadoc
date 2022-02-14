@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@SuppressWarnings("unused")
 public class Doclet {
 
     private static final List<String> opts = List.of("-d", "-t", "-u");//, "-doctitle", "-windowtitle");
@@ -20,16 +21,14 @@ public class Doclet {
         Path destination = Paths.get(option(root, "-d", "docs"));
         String title = option(root, "-t", "javadoc");
         String url = option(root, "-u", "reference/javadoc");
-
         clean(destination);
-
         Files.createDirectories(destination);
         FileWriter.writeIndex(destination, title);
-        PackageWriter.init(root, destination.resolve("01-Packages"), url).writeAll();
-        ClassWriter.init(root, destination.resolve("02-Classes"), url).writeAll();
-
+        new PackageWriter(root, destination.resolve("packages"), url).writeAll();
+        new ClassWriter(root, destination.resolve("classes"), url).writeAll();
         return true;
     }
+
 
     /**
      * Allow custom doclet opts
@@ -54,7 +53,7 @@ public class Doclet {
     }
 
     private static void clean(Path target) throws IOException {
-        System.out.println(String.format("Cleaning: %s", target));
+        System.out.printf("Cleaning: %s%n", target);
         if (!Files.exists(target)) {
             return;
         }

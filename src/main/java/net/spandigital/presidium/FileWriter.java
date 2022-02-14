@@ -4,6 +4,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Consumer;
+
+import static net.spandigital.presidium.Markdown.slugify;
 
 /**
  * Created by paco on 2017/05/26.
@@ -11,15 +14,14 @@ import java.nio.file.Path;
 public class FileWriter {
 
     public static String fileName(int order, String name) {
-        return String.format("%03d-%s.md", order, name);
+        return String.format("%s.md", name);
     }
 
     public static void writeIndex(Path path, String title) {
-        write(path.resolve("index.md"), Markdown.frontMatter(title));
-    }
-
-    public static void write(Path file, StringBuffer content) {
-        write(file, content.toString());
+        Markdown.editFrontMapper(path.resolve("index.md"), (a) -> {
+            a.put("title", title);
+            a.put("slug", slugify(title));
+        });
     }
 
     public static void write(Path file, String content) {

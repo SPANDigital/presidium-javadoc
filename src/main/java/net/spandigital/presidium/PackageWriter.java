@@ -21,19 +21,16 @@ import static net.spandigital.presidium.Markdown.*;
  */
 public class PackageWriter {
 
-    private RootDoc root;
-    private Path destination;
-    private String sectionUrl;
+    private final RootDoc root;
+    private final Path destination;
+    private final String sectionUrl;
 
-    public static PackageWriter init(RootDoc root, Path destination, String sectionUrl) {
-        PackageWriter writer = new PackageWriter();
-        writer.root = root;
-        writer.destination = destination;
-        writer.sectionUrl = sectionUrl;
-        return writer;
+
+    public PackageWriter(RootDoc root, Path destination, String sectionUrl) {
+        this.root = root;
+        this.destination = destination;
+        this.sectionUrl = sectionUrl;
     }
-
-    private PackageWriter() {}
 
     public void writeAll() throws IOException {
 
@@ -53,20 +50,22 @@ public class PackageWriter {
             String name = FileWriter.fileName(i++, pkg.name());
             Path file = destination.resolve(name);
             writeArticle(file, pkg);
+            int weight = i+1;
+            editFrontMapper(file, fm -> fm.put("weight", weight));
         }
     }
 
     private void writePackageList(List<PackageDoc> packages) {
         String name = FileWriter.fileName(0, "package-summary");
         Path file = destination.resolve(name);
-        FileWriter.write(file, Markdown.join(
+        FileWriter.write(file, Markdown.lines(
                 frontMatter("Packages"),
                 packageList(packages)
         ));
     }
 
     private void writeArticle(Path file, PackageDoc pkg) {
-        FileWriter.write(file, Markdown.join(
+        FileWriter.write(file, Markdown.lines(
                 frontMatter(pkg.name()),
                 docSummary(pkg),
                 packageClasses(pkg),
@@ -77,7 +76,7 @@ public class PackageWriter {
 
     private static String packageList(List<PackageDoc> packages) {
         return packages.size() == 0 ? "" :
-                Markdown.join(
+                Markdown.lines(
                     tableHeader("Package", "Description"),
                     packages.stream()
                             .sorted()
@@ -96,7 +95,7 @@ public class PackageWriter {
 
     private String classTable(String type, ClassDoc[] classes) {
         return classes.length == 0 ? "" :
-                Markdown.join(
+                Markdown.lines(
                     h1(type),
                     tableHeader(type, "Description"),
                     Arrays.stream(classes)
