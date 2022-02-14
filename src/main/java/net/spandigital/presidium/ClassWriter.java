@@ -23,18 +23,17 @@ import static net.spandigital.presidium.Markdown.*;
  */
 public class ClassWriter {
 
-    private RootDoc root;
-    private Path destination;
-    private String sectionUrl;
+    private final RootDoc root;
+    private final Path destination;
+    private final String sectionUrl;
     private Set<String> knownQualifiers;
 
-    public static ClassWriter init(RootDoc root, Path destination, String sectionUrl) {
-        ClassWriter writer = new ClassWriter();
-        writer.root = root;
-        writer.destination = destination;
-        writer.sectionUrl = sectionUrl;
-        return writer;
+    public ClassWriter(RootDoc root, Path destination, String sectionUrl) {
+        this.root = root;
+        this.destination = destination;
+        this.sectionUrl = sectionUrl;
     }
+
 
     public void writeAll() throws IOException {
 
@@ -58,7 +57,7 @@ public class ClassWriter {
 
     public void write(Path file, ClassDoc cls) throws IOException {
         FileWriter.write(file,
-                Markdown.join(
+                Markdown.lines(
                     frontMatter(cls.name()),
                     header(cls),
                     newLine(),
@@ -74,7 +73,7 @@ public class ClassWriter {
 
     private String header(ClassDoc cls) {
         String containingPackage = cls.containingPackage().name();
-        return Markdown.join(
+        return Markdown.lines(
                 anchor(cls),
                 Markdown.siteLink(containingPackage, sectionUrl + "/packages/#" + containingPackage),
                 h1(title(cls))
@@ -118,7 +117,7 @@ public class ClassWriter {
 
     private String constructorList(ClassDoc cls) {
         return cls.constructors().length == 0 ? "" :
-                Markdown.join(
+                Markdown.lines(
                     h1("Constructor Summary"),
                     tableHeader("Modifiers", "Constructor"),
                     Arrays.stream(cls.constructors())
@@ -131,7 +130,7 @@ public class ClassWriter {
 
     private String methodList(ClassDoc cls) {
         return (cls.methods().length == 0) ? "" :
-                Markdown.join(
+                Markdown.lines(
                         h1("Method Summary"),
                         tableHeader("Modifiers", "Return", "Method"),
                         Arrays.stream(cls.methods())
@@ -145,7 +144,7 @@ public class ClassWriter {
     private String classDescription(ClassDoc cls) {
         String comment = docComment(cls);
         return (comment.length() == 0) ? "" :
-                Markdown.join(
+                Markdown.lines(
                         h1("Description"),
                         comment
                 );
@@ -171,7 +170,7 @@ public class ClassWriter {
 
     private String constructorDetail(ClassDoc cls) {
         return cls.constructors().length == 0 ? "" :
-                Markdown.join(
+                Markdown.lines(
                         h1("Constructor Detail"),
                         Arrays.stream(cls.constructors())
                             .map(c -> memberDetail(c))
@@ -182,7 +181,7 @@ public class ClassWriter {
 
     private String methodDetail(ClassDoc cls) {
         return cls.methods().length == 0 ? "" :
-                Markdown.join(
+                Markdown.lines(
                         h1("Method Detail"),
                         anchor(cls),
                         Arrays.stream(cls.methods())
@@ -193,7 +192,7 @@ public class ClassWriter {
     }
 
     private String memberDetail(ExecutableMemberDoc member) {
-        return Markdown.join(
+        return Markdown.lines(
             hr(),
             anchor(member),
             h2(member.name()),

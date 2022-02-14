@@ -2,31 +2,142 @@ package net.spandigital.presidium;
 
 import com.sun.javadoc.Doc;
 import com.sun.javadoc.ProgramElementDoc;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
-import java.io.BufferedReader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
+import java.io.FileWriter;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Consumer;
+
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static net.spandigital.presidium.IO.copy;
+import static net.spandigital.presidium.IO.skipLines;
+import static net.spandigital.presidium.Paths.requiredFile;
 
 /**
  * Markdown generation methods.
+ *
  * @author Paco Mendes
  */
 public class Markdown {
 
-    public static String frontMatter(String title) {
-        return Markdown.join(
-                "---",
-                "title: " + title,
-                "---",
-                Markdown.newLine()
+    public static final String FRONT_MATTER_DELIMITER = "---";
+
+    static Yaml yaml() {
+        DumperOptions d = new DumperOptions();
+        d.setPrettyFlow(true);
+        d.setExplicitStart(true);
+        d.setExplicitEnd(false);
+        d.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        return new Yaml(d);
+    }
+
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void editFrontMapper(Path path, Consumer<Map<Object, Object>> editor) {
+
+        File file = requiredFile(path);
+        Yaml yaml = yaml();
+        Map<Object, Object> frontMatter = null;
+        String frontMatterContent = null;
+        int frontMatterRows = 0;
+        String updatedFrontMatter = null;
+
+        try (RandomAccessFile source = new RandomAccessFile(file, "rw")) {
+
+            StringBuilder sb = new StringBuilder();
+            String line = source.readLine();
+            boolean readingFrontMatter = line != null && (line.trim()).equals(FRONT_MATTER_DELIMITER);
+            boolean frontMatterFound = false;
+
+            if (readingFrontMatter) {
+                while (true) {
+                    line = source.readLine();
+                    if (line == null) break;
+                    line = line.trim();
+                    if (line.equals(FRONT_MATTER_DELIMITER)) {
+                        frontMatterFound = true;
+                        break;
+                    }
+                    sb.append(line).append(newLine());
+                    ++frontMatterRows;
+                }
+            }
+
+            String existingFrontMatter;
+            if (frontMatterFound) {
+                existingFrontMatter = sb.toString();
+                frontMatter = yaml.load(existingFrontMatter);
+                frontMatterContent = yaml.dump(frontMatter);
+                frontMatterRows += 2;
+            } else {
+                frontMatterRows = 0;
+                frontMatter = new LinkedHashMap<>();
+            }
+
+            editor.accept(frontMatter);
+            updatedFrontMatter = yaml.dump(frontMatter);
+
+            boolean updated = !Objects.equals(frontMatterContent, updatedFrontMatter);
+
+            if (updated) {
+                File temp = Files.createTempFile(null, null).toFile();
+                try {
+                    try (PrintWriter edit = new PrintWriter(new BufferedWriter(new FileWriter(temp)))) {
+                        if (frontMatter.size() > 0) {
+                            edit.print(updatedFrontMatter);
+                            edit.println(FRONT_MATTER_DELIMITER);
+                        }
+                        source.seek(0);
+                        if (frontMatterRows > 0) {
+                            skipLines(source, frontMatterRows);
+                        }
+                        while (true) {
+                            line = source.readLine();
+                            if (line == null) {
+                                break;
+                            }
+                            edit.println(line);
+                        }
+                    }
+                    source.seek(0);
+                    copy(temp, source);
+                    source.setLength(temp.length());
+                } finally {
+                    temp.delete();
+                }
+            }
+
+        } catch (IOException e) {
+            throw new IO.Exception("failure editing front matter", e);
+        }
+
+
+    }
+
+    public static String slugify(String str) {
+        return str.toLowerCase().replaceAll("\\W+", "-");
+    }
+
+    public static String frontMatter(String title, String slug) {
+        return Markdown.lines(
+                FRONT_MATTER_DELIMITER,
+                format("%s: \"%s\"", "title", title),
+                format("%s: \"%s\"", "slug", slug),
+                FRONT_MATTER_DELIMITER
         );
     }
 
-    public static String join(String... elements) {
-        return Arrays.stream(elements).collect(Collectors.joining(newLine()));
+    public static String frontMatter(String title) {
+        return frontMatter(title, slugify(title));
+    }
+
+    public static String lines(String... lines) {
+        return Arrays.stream(lines).collect(joining(newLine()));
     }
 
     public static String h1(String title) {
@@ -46,27 +157,27 @@ public class Markdown {
     }
 
     public static String quote(String text) {
-        return String.format("%s> %s%s", Markdown.newLine(), text, Markdown.newLine());
+        return format("%s> %s%s", Markdown.newLine(), text, Markdown.newLine());
     }
 
     public static String hr() {
-        return Markdown.newLine(2) + "---" + Markdown.newLine();
+        return Markdown.newLine(2) + FRONT_MATTER_DELIMITER + Markdown.newLine();
     }
 
     public static String anchor(ProgramElementDoc element) {
-        return String.format("<span class=\"anchor\" id=\"%s\"></span>", element.qualifiedName());
+        return format("<span class=\"anchor\" id=\"%s\"></span>", element.qualifiedName());
     }
 
     public static String link(String value, String target) {
-        return String.format("[%s](%s)", value, target);
+        return format("[%s](%s)", value, target);
     }
 
     public static String siteLink(String value, String target) {
-        return String.format("[%s]({{'%s' | relative_url }})", value, target);
+        return format("[%s]({{'%s' | relative_url }})", value, target);
     }
 
     public static String anchorLink(String value, String target) {
-        return String.format("[%s](#%s)", value, target);
+        return format("[%s](#%s)", value, target);
     }
 
     public static String newLine() {
@@ -78,9 +189,9 @@ public class Markdown {
     }
 
     public static String tableHeader(String... titles) {
-        StringBuffer header = new StringBuffer();
+        StringBuilder header = new StringBuilder();
         for (String title : titles) {
-            header.append(String.format("| %s ", title));
+            header.append(format("| %s ", title));
         }
         header.append(Markdown.newLine());
         header.append(String.join("", Collections.nCopies(titles.length, "|:---")));
@@ -94,8 +205,8 @@ public class Markdown {
 
     public static String tableRow(Collection<String> values) {
         return values.stream()
-                .map(v -> String.format("|%s ", v))
-                .collect(Collectors.joining()) + Markdown.newLine();
+                .map(v -> format("|%s ", v))
+                .collect(joining()) + Markdown.newLine();
     }
 
     public static String docSummary(Doc doc) {
